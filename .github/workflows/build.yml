@@ -49,20 +49,3 @@ jobs:
       # ──────────────────────────────────────────────
       - name: 运行测试
         run: dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore --verbosity normal
-
-      # 收集测试覆盖率并上传为 artifact
-      - name: 运行测试并收集覆盖率
-        run: >
-          dotnet test --configuration ${{ env.BUILD_CONFIGURATION }}
-          --no-restore
-          --collect:"XPlat Code Coverage"
-          --results-directory ./coverage
-          --verbosity normal
-      
-      - name: 运行测试并收集覆盖率
-  run: |
-    dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} \
-      --no-restore \
-      --collect:"XPlat Code Coverage" \
-      --results-directory ./coverage \
-      --verbosity normal
