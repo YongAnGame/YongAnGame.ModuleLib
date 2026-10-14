@@ -47,14 +47,16 @@ jobs:
       # MinVer 自动从 git tag 推导版本，无需传参
       # ──────────────────────────────────────────────
       - name: 构建
-        run: dotnet build "${{ env.PROJECT_PATH }}" \
-          --configuration ${{ env.BUILD_CONFIGURATION }} \
+        run: > 
+          dotnet build "${{ env.PROJECT_PATH }}" 
+          --configuration ${{ env.BUILD_CONFIGURATION }} 
           --no-restore
 
       - name: 打包
-        run: dotnet pack "${{ env.PROJECT_PATH }}" \
-          --configuration ${{ env.BUILD_CONFIGURATION }} \
-          --no-build \
+        run: >
+          dotnet pack "${{ env.PROJECT_PATH }}" 
+          --configuration ${{ env.BUILD_CONFIGURATION }} 
+          --no-build 
           --output "${{ env.ARTIFACTS_DIR }}"
 
       # ──────────────────────────────────────────────
@@ -63,7 +65,7 @@ jobs:
       - name: 读取生成的版本
         id: version
         shell: bash
-        run: |
+        run: >
           PKG=$(ls "${{ env.ARTIFACTS_DIR }}"/*.nupkg | head -n1)
           FILENAME=$(basename "$PKG" .nupkg)
           VERSION="${FILENAME#YongAnGame.ModuleLib.}"
@@ -77,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nuget-${{ steps.version.outputs.version }}
-          path: |
+          path: >
             ${{ env.ARTIFACTS_DIR }}/*.nupkg
             ${{ env.ARTIFACTS_DIR }}/*.snupkg
           retention-days: 30
@@ -88,7 +90,8 @@ jobs:
       # ──────────────────────────────────────────────
       - name: 发布到 NuGet.org
         if: startsWith(github.ref, 'refs/tags/v')
-        run: dotnet nuget push "${{ env.ARTIFACTS_DIR }}/*.nupkg" \
-          --api-key "${{ secrets.NUGET_API_KEY }}" \
-          --source "https://api.nuget.org/v3/index.json" \
+        run: >
+          dotnet nuget push "${{ env.ARTIFACTS_DIR }}/*.nupkg"
+          --api-key "${{ secrets.NUGET_API_KEY }}"
+          --source "https://api.nuget.org/v3/index.json"
           --skip-duplicate

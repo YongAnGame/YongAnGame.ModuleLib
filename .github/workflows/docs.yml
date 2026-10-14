@@ -39,7 +39,7 @@ jobs:
         run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
 
       - name: 安装 DocFX
-        run: dotnet tool install -g docs
+        run: dotnet tool install -g docfx
 
       - name: 生成 API 元数据
         run: docfx metadata docs/docfx.json
