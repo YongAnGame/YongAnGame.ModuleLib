@@ -9,6 +9,7 @@
             "**/bin/**",
             "**/obj/**",
             "**/test/**",
+            "**/*.Test/**",
             "**/*.Tests/**"
           ]
         }
@@ -23,7 +24,7 @@
   "build": {
     "content": [
       {
-        "files": [ "api/**.yml", "api/index.md" ]
+        "files": [ "api/*.yml", "api/index.md" ]
       },
       {
         "files": [ "**.md", "**/*.yml" ],
@@ -43,7 +44,7 @@
     "globalMetadata": {
       "_appName": "YongAnGame.ModuleLib",
       "_appTitle": "YongAnGame.ModuleLib 文档",
-      "_appFooter": "© 2025 YongAnGame. All rights reserved.",
+      "_appFooter": "© 2026 YongAnGame. All rights reserved.",
       "_enableSearch": true,
       "_disableContribution": false,
       "_gitContribute": {

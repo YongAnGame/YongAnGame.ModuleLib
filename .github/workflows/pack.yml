@@ -23,17 +23,17 @@ jobs:
       # 浅克隆会让版本回退到 0.0.0
       # ──────────────────────────────────────────────
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: 安装 .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: 缓存 NuGet 包
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Packages.props', '**/packages.lock.json') }}
@@ -65,7 +65,7 @@ jobs:
       - name: 读取生成的版本
         id: version
         shell: bash
-        run: >
+        run: |
           PKG=$(ls "${{ env.ARTIFACTS_DIR }}"/*.nupkg | head -n1)
           FILENAME=$(basename "$PKG" .nupkg)
           VERSION="${FILENAME#YongAnGame.ModuleLib.}"
@@ -76,10 +76,10 @@ jobs:
         run: ls -lh "${{ env.ARTIFACTS_DIR }}"
 
       - name: 上传 NuGet 产物
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: nuget-${{ steps.version.outputs.version }}
-          path: >
+          path: |
             ${{ env.ARTIFACTS_DIR }}/*.nupkg
             ${{ env.ARTIFACTS_DIR }}/*.snupkg
           retention-days: 30
