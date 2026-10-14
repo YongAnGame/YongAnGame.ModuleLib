@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main", "master", "dev" ]
+  pull_request:
+    branches: [ "main", "master", "dev" ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  BUILD_CONFIGURATION: 'Release'
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # ──────────────────────────────────────────────
+      # MinVer 需要完整 git 历史来推导版本
+      # ──────────────────────────────────────────────
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 安装 .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 缓存 NuGet 包
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Packages.props', '**/packages.lock.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: 恢复依赖
+        run: dotnet restore
+
+      - name: 构建
+        run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+      # ──────────────────────────────────────────────
+      # 测试流程
+      # ──────────────────────────────────────────────
+      - name: 运行测试
+        run: dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore --verbosity normal
+
+      # 收集测试覆盖率并上传为 artifact
+      - name: 运行测试并收集覆盖率
+        run: >
+          dotnet test --configuration ${{ env.BUILD_CONFIGURATION }}
+          --no-restore
+          --collect:"XPlat Code Coverage"
+          --results-directory ./coverage
+          --verbosity normal
+      
+      - name: 上传覆盖率报告
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: ./coverage

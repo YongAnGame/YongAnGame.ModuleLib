@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net47;net8.0;net10.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<AnalysisLevel>latest-All</AnalysisLevel>
+
+		<!-- NuGet 包元数据（注意：没有 <Version>，由 MinVer 推导） -->
+		<PackageId>YongAnGame.ModuleLib</PackageId>
+		<Authors>YourName</Authors>
+		<Description>面向游戏 MOD 系统的通用模块库，提供配置加载、序列化、仓储管理等基础设施</Description>
+		<PackageTags>game;mod;config;serialization;yaml;json</PackageTags>
+		<PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageProjectUrl>https://github.com/YongAnGame/YongAnGame.ModuleLib</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/YongAnGame/YongAnGame.ModuleLib</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<!-- 生成 XML 文档，DocFX 需要 -->
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
+
+		<!-- 符号包 -->
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+		<!-- SourceLink -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+		<!-- 多目标时每个 TFM 独立打包 -->
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<!-- ────────────────────────────────────────────── -->
+	<!-- MinVer：从 git tag 自动推导版本                 -->
+	<!-- ────────────────────────────────────────────── -->
+	<PropertyGroup>
+		<MinVerTagPrefix>v</MinVerTagPrefix>
+		<MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
+		<MinVerDefaultPreReleaseIdentifiers>dev.0</MinVerDefaultPreReleaseIdentifiers>
+	</PropertyGroup>
+
+	<!-- ────────────────────────────────────────────── -->
+	<!-- 全目标框架通用依赖                               -->
+	<!-- ────────────────────────────────────────────── -->
+	<ItemGroup>
+		<PackageReference Include="Serilog" Version="4.4.0" />
+		<PackageReference Include="YamlDotNet" Version="18.1.0" />
+		<PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
+	</ItemGroup>
+
+	<!-- ────────────────────────────────────────────── -->
+	<!-- netstandard2.0 + net47：缺失大量 BCL API        -->
+	<!-- ────────────────────────────────────────────── -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net47'">
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
+		<PackageReference Include="System.Text.Json" Version="10.0.12" />
+		<PackageReference Include="Polyfill" Version="11.4.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<!-- ────────────────────────────────────────────── -->
+	<!-- netstandard2.1：有 Range/Index/HashCode，       -->
+	<!-- 但缺 IParsable、ThrowIfXxx、CallerArgumentExpr  -->
+	<!-- ────────────────────────────────────────────── -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="System.Text.Json" Version="10.0.12" />
+		<PackageReference Include="Polyfill" Version="11.4.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+</Project>

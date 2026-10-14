@@ -1,0 +1,94 @@
+name: Pack
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  BUILD_CONFIGURATION: 'Release'
+  PROJECT_PATH: 'src/YongAnGame.ModuleLib/YongAnGame.ModuleLib.csproj'
+  ARTIFACTS_DIR: 'artifacts'
+
+jobs:
+  pack:
+    name: Pack NuGet
+    runs-on: ubuntu-latest
+
+    steps:
+      # ──────────────────────────────────────────────
+      # MinVer 依赖完整 git 历史才能正确推导版本
+      # 浅克隆会让版本回退到 0.0.0
+      # ──────────────────────────────────────────────
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 安装 .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 缓存 NuGet 包
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Packages.props', '**/packages.lock.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: 恢复依赖
+        run: dotnet restore
+
+      # ──────────────────────────────────────────────
+      # MinVer 自动从 git tag 推导版本，无需传参
+      # ──────────────────────────────────────────────
+      - name: 构建
+        run: dotnet build "${{ env.PROJECT_PATH }}" \
+          --configuration ${{ env.BUILD_CONFIGURATION }} \
+          --no-restore
+
+      - name: 打包
+        run: dotnet pack "${{ env.PROJECT_PATH }}" \
+          --configuration ${{ env.BUILD_CONFIGURATION }} \
+          --no-build \
+          --output "${{ env.ARTIFACTS_DIR }}"
+
+      # ──────────────────────────────────────────────
+      # 从 nupkg 文件名反推版本，供后续步骤引用
+      # ──────────────────────────────────────────────
+      - name: 读取生成的版本
+        id: version
+        shell: bash
+        run: |
+          PKG=$(ls "${{ env.ARTIFACTS_DIR }}"/*.nupkg | head -n1)
+          FILENAME=$(basename "$PKG" .nupkg)
+          VERSION="${FILENAME#YongAnGame.ModuleLib.}"
+          echo "包版本：$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: 列出产物
+        run: ls -lh "${{ env.ARTIFACTS_DIR }}"
+
+      - name: 上传 NuGet 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-${{ steps.version.outputs.version }}
+          path: |
+            ${{ env.ARTIFACTS_DIR }}/*.nupkg
+            ${{ env.ARTIFACTS_DIR }}/*.snupkg
+          retention-days: 30
+
+      # ──────────────────────────────────────────────
+      # 只有 tag push 才发布到 NuGet.org
+      # 需要在仓库 Secrets 里配置 NUGET_API_KEY
+      # ──────────────────────────────────────────────
+      - name: 发布到 NuGet.org
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: dotnet nuget push "${{ env.ARTIFACTS_DIR }}/*.nupkg" \
+          --api-key "${{ secrets.NUGET_API_KEY }}" \
+          --source "https://api.nuget.org/v3/index.json" \
+          --skip-duplicate

@@ -1,0 +1,39 @@
+name: 文档问题
+description: 报告文档错误或提出改进
+title: "[Docs]: "
+labels: ["documentation", "triage"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: 文档位置
+      description: 文件路径、URL 或章节标题
+      placeholder: "例如：README.md / docfx/api/..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: 问题描述
+      description: 哪里不正确、不清楚或缺失？
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 建议修改
+      description: 你希望改成什么？
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 确认
+      options:
+        - label: 我已搜索现有 Issue，确认没有重复
+          required: true
+        - label: 我愿意提交 PR 修改文档
+          required: false
