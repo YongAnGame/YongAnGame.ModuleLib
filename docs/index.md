@@ -44,7 +44,7 @@ if (repo.TryGetValue<CharacterConfig, CharacterData>("char_001", out var data))
 | [配置仓储](articles/repository.md) | 从 MOD 目录加载、缓存、查询配置 |
 | [标识符](articles/id.md) | `Id` 的格式、解析、比较方法 |
 | [线程安全模型](articles/threading.md) | 并发设计、快照替换机制 |
-| [API 参考](api/) | 所有公开类型的 API 文档 |
+| [API 参考](api/YongAnGame.ModuleLib.Compatibility.html) | 所有公开类型的 API 文档 |
 | [贡献指南](CONTRIBUTING.md) | 开发流程与代码规范 |
 
 ## 支持的目标框架

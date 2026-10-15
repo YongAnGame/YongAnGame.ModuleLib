@@ -2,6 +2,8 @@
 
 面向游戏 MOD 系统的通用模块库，提供配置加载、序列化、仓储管理等基础设施
 
+[项目文档](https://yongangame.github.io/YongAnGame.ModuleLib/)
+
 ## 特性
 
 - **多种格式支持**：JSON（System.Text.Json）、YAML（YamlDotNet），通过统一接口 `IConfigSerializer` 抽象，换格式不改调用方
