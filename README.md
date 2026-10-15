@@ -138,7 +138,7 @@ id.SameAll(other);           // 完全相等
 |------|------|----------|
 | **Polyfill**（SimonCropp） | BCL API 补齐 | `KeyValuePair.Deconstruct`、`HashData` 等 |
 | **Microsoft.Bcl.HashCode** | 官方兼容包 | `HashCode.Combine` 等 |
-| 本项目 **Compatibility** 文件wIfXxx` 静态扩展、`CallerArgumentExpression`（如未由 Polyfill 提夹 | 项目自维护 | `Thro供） |
+| 本项目 **Compatibility** 文件 | 项目自维护 | `ThrowIfXxx` 静态扩展、`CallerArgumentExpression`（如未由 Polyfill 提夹供） |
 
 调用点代码**无需条件编译**，例如下面写法在所有目标框架下均能通过：
 
