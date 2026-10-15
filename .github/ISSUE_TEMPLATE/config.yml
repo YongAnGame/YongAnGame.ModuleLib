@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: 讨论区
-    url: https://github.com/YongAnGame/YongAnGame.ModuleLib/discussions
-    about: 一般讨论、提问和想法
-  - name: 安全漏洞
-    url: https://github.com/YongAnGame/YongAnGame.ModuleLib/security/advisories/new
-    about: 请私下报告安全漏洞
