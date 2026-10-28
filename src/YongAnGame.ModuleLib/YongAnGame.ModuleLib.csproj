@@ -9,9 +9,10 @@
 
 		<!-- NuGet 包元数据（注意：没有 <Version>，由 MinVer 推导） -->
 		<PackageId>YongAnGame.ModuleLib</PackageId>
-		<Authors>YourName</Authors>
+		<Authors>YongAnGame</Authors>
 		<Description>面向游戏 MOD 系统的通用模块库，提供配置加载、序列化、仓储管理等基础设施</Description>
 		<PackageTags>game;mod;config;serialization;yaml;json</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageProjectUrl>https://github.com/YongAnGame/YongAnGame.ModuleLib</PackageProjectUrl>
@@ -41,7 +42,14 @@
 		<MinVerTagPrefix>v</MinVerTagPrefix>
 		<MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
 		<MinVerDefaultPreReleaseIdentifiers>dev</MinVerDefaultPreReleaseIdentifiers>
+		<Copyright>Copyright © YongAnGame</Copyright>
 	</PropertyGroup>
+	<ItemGroup>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
 	<!-- ────────────────────────────────────────────── -->
 	<!-- 全目标框架通用依赖                               -->
