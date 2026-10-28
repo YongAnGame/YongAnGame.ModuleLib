@@ -23,7 +23,7 @@ jobs:
         with:
           path-to-signatures: 'signatures/version1/cla.json'
           branch: 'cla-signatures'
-          path-to-document: 'https://raw.githubusercontent.com/YongAnGame/YongAnGame.ModuleLib/main/CLA.md'
+          path-to-document: 'https://raw.githubusercontent.com/YongAnGame/YongAnGame.ModuleLib/master/CLA.md'
           allowlist: 'YongAn404,dependabot[bot],renovate[bot]'
           custom-notsigned-prcomment: '感谢你的贡献！请签署 CLA 后我们才能合并你的 PR。'
           custom-pr-sign-comment: 'I have read the CLA Document and I hereby sign the CLA'

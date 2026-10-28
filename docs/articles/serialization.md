@@ -101,10 +101,9 @@ serializer.AddTypeConverter(new GridCellConverter());
 IConfigSerializerFactory factory = new ConfigSerializerFactory()
     .WithYaml();
 
-factory.ForFile("data.json");   // → JsonConfigSerializer（默认兜底）
+factory.ForFile("data.json");   // → JsonConfigSerializer
 factory.ForFile("data.yaml");   // → YamlConfigSerializer
 factory.ForFile("data.yml");    // → YamlConfigSerializer
-factory.ForFile("data.txt");    // → JsonConfigSerializer（兜底）
 ```
 
 工厂构造时默认注册 `JsonConfigSerializer` 作为兜底，扩展名不匹配任何实现时使用。

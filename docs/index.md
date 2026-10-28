@@ -9,7 +9,7 @@
 - **多种格式支持**：JSON、YAML，通过统一接口 `IConfigSerializer` 抽象，换格式不改调用方
 - **自动格式识别**：`IConfigSerializerFactory` 按文件扩展名自动选择合适的序列化器
 - **线程安全**：所有公开接口承诺并发安全，读路径无锁，写路径采用不可变快照替换
-- **结构化标识符**：`Id` 支持 `ModId.ItemId[:SubId]` 格式，内置多维度比较方法
+- **结构化标识符**：`Id` 支持 `ModId.ItemId:SubId` 格式，内置多维度比较方法
 - **面向 MOD 的配置仓储**：`IConfigRepository` 负责目录扫描、缓存、哈希，支持热加载
 - **低框架兼容**：通过 Polyfill 为 `netstandard2.0` 等旧目标补齐新 API
 
@@ -44,7 +44,7 @@ if (repo.TryGetValue<CharacterConfig, CharacterData>("char_001", out var data))
 | [配置仓储](articles/repository.md) | 从 MOD 目录加载、缓存、查询配置 |
 | [标识符](articles/id.md) | `Id` 的格式、解析、比较方法 |
 | [线程安全模型](articles/threading.md) | 并发设计、快照替换机制 |
-| [API 参考](api/) | 所有公开类型的 API 文档 |
+| [API 参考](api/YongAnGame.ModuleLib.Compatibility.html) | 所有公开类型的 API 文档 |
 | [贡献指南](CONTRIBUTING.md) | 开发流程与代码规范 |
 
 ## 支持的目标框架

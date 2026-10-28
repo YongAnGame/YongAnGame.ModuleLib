@@ -1,4 +1,4 @@
-using YongAnGame.ModuleLib.Compatibility;
+using YongAnGame.ModuleLib.Extensions;
 using YongAnGame.ModuleLib.Features.Serializers;
 using YongAnGame.ModuleLib.Interfaces.Configs;
 

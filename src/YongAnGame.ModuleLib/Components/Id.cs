@@ -254,7 +254,7 @@ public readonly struct Id
     public static Id Parse(string s, IFormatProvider? provider) => new(s);
 
     /// <summary>
-    /// 尝试将 <c>ModId.ItemId[:SubId]</c> 格式的字符串解析为 <see cref="Id"/>
+    /// 尝试将 <c>ModId.ItemId:SubId</c> 格式的字符串解析为 <see cref="Id"/>
     /// </summary>
     /// <param name="s">要解析的字符串</param>
     /// <param name="provider">格式提供程序，当前实现忽略此参数</param>

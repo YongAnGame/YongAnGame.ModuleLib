@@ -2,12 +2,14 @@
 
 面向游戏 MOD 系统的通用模块库，提供配置加载、序列化、仓储管理等基础设施
 
+[项目文档](https://yongangame.github.io/YongAnGame.ModuleLib/)
+
 ## 特性
 
 - **多种格式支持**：JSON（System.Text.Json）、YAML（YamlDotNet），通过统一接口 `IConfigSerializer` 抽象，换格式不改调用方
 - **自动格式识别**：`IConfigSerializerFactory` 按文件扩展名自动选择合适的序列化器
 - **线程安全**：所有公开接口承诺并发安全，读路径无锁，写路径采用不可变快照替换
-- **结构化标识符**：`Id` 支持 `ModId.ItemId[:SubId]` 格式，内置多维度比较方法
+- **结构化标识符**：`Id` 支持 `ModId.ItemId:SubId` 格式，内置多维度比较方法
 - **分层接口设计**：调用方只依赖接口，不感知具体实现
 - **面向 MOD 的配置仓储**：`IConfigRepository` 负责目录扫描、缓存、哈希，支持热加载
 - **低框架兼容**：通过 Polyfill 为 `netstandard2.0` 等旧目标补齐新 API，调用点无需条件编译
@@ -136,7 +138,7 @@ id.SameAll(other);           // 完全相等
 |------|------|----------|
 | **Polyfill**（SimonCropp） | BCL API 补齐 | `KeyValuePair.Deconstruct`、`HashData` 等 |
 | **Microsoft.Bcl.HashCode** | 官方兼容包 | `HashCode.Combine` 等 |
-| 本项目 **Compatibility** 文件wIfXxx` 静态扩展、`CallerArgumentExpression`（如未由 Polyfill 提夹 | 项目自维护 | `Thro供） |
+| 本项目 **Compatibility** 文件 | 项目自维护 | `ThrowIfXxx` 静态扩展、`CallerArgumentExpression`（如未由 Polyfill 提供） |
 
 调用点代码**无需条件编译**，例如下面写法在所有目标框架下均能通过：
 
@@ -168,6 +170,7 @@ ArgumentOutOfRangeException.ThrowIfNegative(subId);
 | `Polyfill` | 低框架 BCL API Polyfill |
 | `Microsoft.Bcl.HashCode` | `HashCode` 兼容 |
 | `System.Memory` | 数组切片与 `Span` 支持 |
+| `MinVer` | 版本管理 |
 
 ## 线程安全模型
 

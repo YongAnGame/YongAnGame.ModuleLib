@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using YongAnGame.ModuleLib.Features.Serializers;
 using YongAnGame.ModuleLib.Interfaces.Configs;
 
-namespace YongAnGame.ModuleLib.Compatibility
+namespace YongAnGame.ModuleLib.Extensions
 {
     /// <summary>
     /// <see cref="IConfigSerializerFactory"/> 的便捷扩展方法
