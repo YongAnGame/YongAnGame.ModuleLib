@@ -55,9 +55,9 @@
 	<!-- 全目标框架通用依赖                               -->
 	<!-- ────────────────────────────────────────────── -->
 	<ItemGroup>
-		<PackageReference Include="Serilog" Version="4.4.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
 		<PackageReference Include="YamlDotNet" Version="18.1.0" />
-		<PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
+		<PackageReference Include="MinVer" Version="8.0.0" PrivateAssets="all" />
 	</ItemGroup>
 
 	<!-- ────────────────────────────────────────────── -->

@@ -19,7 +19,7 @@ public class YamlConfigSerializerTests
         var original = new Sample { Name = "test", Value = 42 };
 
         string yaml = serializer.Serialize(original);
-        var deserialized = serializer.Deserialize<Sample>(yaml);
+        Sample? deserialized = serializer.Deserialize<Sample>(yaml);
 
         Assert.IsNotNull(deserialized);
         Assert.AreEqual(original.Name, deserialized.Name);
@@ -31,7 +31,7 @@ public class YamlConfigSerializerTests
     {
         YamlConfigSerializer serializer = new();
 
-        var result = serializer.Deserialize<Sample>("");
+        Sample? result = serializer.Deserialize<Sample>("");
 
         Assert.IsNull(result);
     }
@@ -62,7 +62,7 @@ public class YamlConfigSerializerTests
 
         Parallel.For(0, 1000, _ =>
         {
-            var result = serializer.Deserialize<Sample>(yaml);
+            Sample? result = serializer.Deserialize<Sample>(yaml);
             Assert.IsNotNull(result);
         });
     }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSTest.Sdk/4.0.2">
+﻿<Project Sdk="MSTest.Sdk/4.5.2">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -11,5 +11,4 @@
   <ItemGroup>
     <ProjectReference Include="..\YongAnGame.ModuleLib\YongAnGame.ModuleLib.csproj" />
   </ItemGroup>
-
 </Project>

@@ -19,7 +19,7 @@ public class JsonConfigSerializerTests
         var original = new Sample { Name = "test", Value = 42 };
 
         string json = serializer.Serialize(original);
-        var deserialized = serializer.Deserialize<Sample>(json);
+        Sample? deserialized = serializer.Deserialize<Sample>(json);
 
         Assert.IsNotNull(deserialized);
         Assert.AreEqual(original.Name, deserialized.Name);
@@ -31,7 +31,7 @@ public class JsonConfigSerializerTests
     {
         JsonConfigSerializer serializer = new();
 
-        var result = serializer.Deserialize<Sample>("");
+        Sample? result = serializer.Deserialize<Sample>("");
 
         Assert.IsNull(result);
     }
@@ -41,7 +41,7 @@ public class JsonConfigSerializerTests
     {
         JsonConfigSerializer serializer = new();
 
-        var result = serializer.Deserialize<Sample>("   ");
+        Sample? result = serializer.Deserialize<Sample>("   ");
 
         Assert.IsNull(result);
     }
@@ -123,7 +123,7 @@ public class JsonConfigSerializerTests
 
         Parallel.For(0, 1000, _ =>
         {
-            var result = serializer.Deserialize<Sample>(json);
+            Sample? result = serializer.Deserialize<Sample>(json);
             Assert.IsNotNull(result);
         });
     }
@@ -134,7 +134,7 @@ public class JsonConfigSerializerTests
         var serializer = new JsonConfigSerializer();
         serializer.AddTypeConverter(new UpperCaseStringConverter());
 
-        var result = serializer.Deserialize<WithString>("""{"text":"hello"}""");
+        WithString? result = serializer.Deserialize<WithString>("""{"text":"hello"}""");
 
         Assert.AreEqual("HELLO", result!.Text);
     }

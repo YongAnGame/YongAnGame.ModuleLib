@@ -182,23 +182,23 @@ namespace YongAnGame.ModuleLib.Features.Serializers
         /// </remarks>
         private void Rebuild(IReadOnlyList<IYamlTypeConverter> converters)
         {
-            var deserializerBuilder = new DeserializerBuilder()
+            DeserializerBuilder deserializerBuilder = new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .IgnoreUnmatchedProperties();
 
-            var serializerBuilder = new SerializerBuilder()
+            SerializerBuilder serializerBuilder = new SerializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull);
 
-            foreach (var converter in converters)
+            foreach (IYamlTypeConverter converter in converters)
             {
                 deserializerBuilder.WithTypeConverter(converter);
                 serializerBuilder.WithTypeConverter(converter);
             }
 
             // 两个都构建成功后再赋值
-            var deserializer = deserializerBuilder.Build();
-            var serializer = serializerBuilder.Build();
+            IDeserializer deserializer = deserializerBuilder.Build();
+            ISerializer serializer = serializerBuilder.Build();
 
             _deserializer = deserializer;
             _serializer = serializer;

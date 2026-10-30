@@ -24,7 +24,11 @@ namespace YongAnGame.ModuleLib.Features.Serializers
 
         // 只保护 AddTypeConverter 的“加列表 + 重建 + 回写”这段临界区，
         // 读路径（Serialize/Deserialize）不加锁，靠 volatile 读最新实例
+#if NET10_0_OR_GREATER
+        private readonly Lock _rebuildLock = new();
+#else
         private readonly object _rebuildLock = new();
+#endif
 
         // 每次重建后整体替换，volatile 保证读线程能看到最新引用
         [AllowNull]
@@ -178,7 +182,7 @@ namespace YongAnGame.ModuleLib.Features.Serializers
                 WriteIndented = true,
             };
 
-            foreach (var converter in converters)
+            foreach (JsonConverter converter in converters)
             {
                 options.Converters.Add(converter);
             }

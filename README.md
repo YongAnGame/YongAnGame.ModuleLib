@@ -6,13 +6,13 @@
 
 ## 特性
 
-- **多种格式支持**：JSON（System.Text.Json）、YAML（YamlDotNet），通过统一接口 `IConfigSerializer` 抽象，换格式不改调用方
-- **自动格式识别**：`IConfigSerializerFactory` 按文件扩展名自动选择合适的序列化器
-- **线程安全**：所有公开接口承诺并发安全，读路径无锁，写路径采用不可变快照替换
+- **多种格式支持**：JSON、YAML，通过统一接口 `IConfigSerializer` 抽象，换格式不改调用方
+- **格式工厂**：`IConfigSerializerFactory` 按文件扩展名选择合适的序列化器
+- **线程安全**：所有公开接口承诺并发安全；仓储实现读路径无锁，写路径依赖原子操作
 - **结构化标识符**：`Id` 支持 `ModId.ItemId:SubId` 格式，内置多维度比较方法
-- **分层接口设计**：调用方只依赖接口，不感知具体实现
-- **面向 MOD 的配置仓储**：`IConfigRepository` 负责目录扫描、缓存、哈希，支持热加载
-- **低框架兼容**：通过 Polyfill 为 `netstandard2.0` 等旧目标补齐新 API，调用点无需条件编译
+- **面向 MOD 的配置仓储**：`IConfigRepository` 负责目录扫描、缓存、哈希，支持 `Unload` + `Load` 组合实现热重载
+- **日志抽象**：仓储只依赖 `Microsoft.Extensions.Logging.ILogger`，不绑定具体日志实现
+- **低框架兼容**：通过 Polyfill 为 `netstandard2.0` 等旧目标补齐新 API
 
 ## 项目结构
 
@@ -166,7 +166,7 @@ ArgumentOutOfRangeException.ThrowIfNegative(subId);
 |------|------|
 | `System.Text.Json` | JSON 序列化 |
 | `YamlDotNet` | YAML 序列化 |
-| `Serilog` | 日志 |
+| `Microsoft.Extensions.Logging.Abstractions` | 日志 |
 | `Polyfill` | 低框架 BCL API Polyfill |
 | `Microsoft.Bcl.HashCode` | `HashCode` 兼容 |
 | `System.Memory` | 数组切片与 `Span` 支持 |

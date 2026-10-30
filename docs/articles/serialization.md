@@ -95,7 +95,7 @@ serializer.AddTypeConverter(new GridCellConverter());
 
 ## 多格式工厂
 
-`IConfigSerializerFactory` 按文件扩展名自动选择序列化器：
+`IConfigSerializerFactory` 按文件扩展名选择合适的序列化器：
 
 ```csharp
 IConfigSerializerFactory factory = new ConfigSerializerFactory()
@@ -107,6 +107,16 @@ factory.ForFile("data.yml");    // → YamlConfigSerializer
 ```
 
 工厂构造时默认注册 `JsonConfigSerializer` 作为兜底，扩展名不匹配任何实现时使用。
+
+### 工厂与仓储的关系
+
+`ConfigRepository` 的构造函数接收**单个** `IConfigSerializer`，而不是 `IConfigSerializerFactory`。也就是说：
+
+- 工厂用于调用方按需获取序列化器实例
+- 一个仓储实例只处理一个序列化器声明的扩展名
+- 希望同一 MOD 支持多种格式时，为每种格式创建独立仓储实例
+
+如果后续版本让仓储直接接收工厂，会在本节更新说明。
 
 ## 异常约定
 
@@ -120,7 +130,7 @@ try
 catch (SerializationException ex)
 {
     // 统一处理，不用分别 catch JsonException、YamlException
-    logger.Error(ex, "配置加载失败");
+    logger.LogError(ex, "配置加载失败");
 }
 ```
 

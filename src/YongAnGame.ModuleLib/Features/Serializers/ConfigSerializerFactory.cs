@@ -56,7 +56,7 @@ namespace YongAnGame.ModuleLib.Features.Serializers
             {
                 // 先构建新数组到局部变量，成功后再一次性替换快照
                 // 旧快照在替换前始终对查询线程可用，不会读到半成品
-                var current = _snapshot;
+                IConfigSerializer[] current = _snapshot;
                 var next = new IConfigSerializer[current.Length + 1];
                 next[0] = serializer;
                 Array.Copy(current, 0, next, 1, current.Length);
@@ -72,8 +72,8 @@ namespace YongAnGame.ModuleLib.Features.Serializers
             var ext = Path.GetExtension(filePath);
 
             // 一次性读取快照到本地——保证遍历过程中看到的是同一个数组
-            var snapshot = _snapshot;
-            foreach (var s in snapshot)
+            IConfigSerializer[] snapshot = _snapshot;
+            foreach (IConfigSerializer s in snapshot)
             {
                 foreach (var e in s.Extensions)
                 {
@@ -90,9 +90,9 @@ namespace YongAnGame.ModuleLib.Features.Serializers
         /// <inheritdoc />
         public IReadOnlyList<string> AllExtensions()
         {
-            var snapshot = _snapshot;
+            IConfigSerializer[] snapshot = _snapshot;
             var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var s in snapshot)
+            foreach (IConfigSerializer s in snapshot)
             {
                 foreach (var e in s.Extensions) set.Add(e);
             }

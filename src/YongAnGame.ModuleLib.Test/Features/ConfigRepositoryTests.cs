@@ -1,4 +1,6 @@
-using Serilog;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using YongAnGame.ModuleLib.Components;
 using YongAnGame.ModuleLib.Features.Configs;
 using YongAnGame.ModuleLib.Features.Serializers;
 using YongAnGame.ModuleLib.Interfaces;
@@ -39,7 +41,12 @@ public class ConfigRepositoryTests
     // 测试基础设施
     // ──────────────────────────────────────────────
 
-    private static readonly ILogger Logger = new LoggerConfiguration().CreateLogger();
+    /// <summary>
+    /// ConfigRepository 依赖 Microsoft.Extensions.Logging.ILogger。
+    /// 测试中使用 NullLogger 静默丢弃所有日志，避免测试代码
+    /// 依赖任何具体的日志实现（如 Serilog）
+    /// </summary>
+    private static readonly ILogger Logger = NullLogger.Instance;
 
     private string _tempRoot = "";
     private string _modId = "";
@@ -96,7 +103,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Add_NewGroup_ReturnsTrue()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
 
         bool result = repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
@@ -106,7 +113,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Add_DuplicateGroup_ReturnsFalse()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
         bool result = repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
@@ -117,7 +124,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Add_NullClassType_Throws()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
 
         Assert.ThrowsExactly<ArgumentNullException>(
             () => repo.Add(null!, (typeof(CharacterData), false)));
@@ -130,7 +137,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_SingleItem_ReturnsTrue()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001",
             """{"stringId":"char_001","name":"Miku","health":100}""");
@@ -143,14 +150,14 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_SingleItem_ThenQuery_ReturnsData()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001",
             """{"stringId":"char_001","name":"Miku","health":100}""");
 
         repo.Load<CharacterConfig, CharacterData>("char_001");
         bool found = repo.TryGetValue<CharacterConfig, CharacterData>(
-            "char_001", out var data);
+            "char_001", out CharacterData? data);
 
         Assert.IsTrue(found);
         Assert.IsNotNull(data);
@@ -161,7 +168,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_SingleItem_MissingFile_ReturnsFalse()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
         bool result = repo.Load<CharacterConfig, CharacterData>("missing");
@@ -172,7 +179,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_SingleItem_UnregisteredGroup_ReturnsFalse()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         WriteConfig(typeof(CharacterConfig), "char_001",
             """{"stringId":"char_001"}""");
 
@@ -184,7 +191,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_SingleItem_InvalidJson_ReturnsFalse()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001", "{ invalid json");
 
@@ -196,7 +203,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_SingleItem_Duplicate_SecondReturnsFalse()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001",
             """{"stringId":"char_001","name":"Miku"}""");
@@ -211,7 +218,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_NullClassType_Throws()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
 
         Assert.ThrowsExactly<ArgumentNullException>(
             () => repo.Load(null!, typeof(CharacterData), "x"));
@@ -220,27 +227,10 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_NullConfigType_Throws()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
 
         Assert.ThrowsExactly<ArgumentNullException>(
             () => repo.Load(typeof(CharacterConfig), null!, "x"));
-    }
-
-    // ══════════════════════════════════════════════
-    // Load（泛型）
-    // ══════════════════════════════════════════════
-
-    [TestMethod]
-    public void Load_Generic_SingleItem_ReturnsTrue()
-    {
-        var repo = CreateRepo();
-        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
-        WriteConfig(typeof(CharacterConfig), "char_001",
-            """{"stringId":"char_001","name":"Miku"}""");
-
-        bool result = repo.Load<CharacterConfig, CharacterData>("char_001");
-
-        Assert.IsTrue(result);
     }
 
     // ══════════════════════════════════════════════
@@ -250,7 +240,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void LoadAll_ScansRegisteredGroups()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         repo.Add(typeof(WeaponConfig), (typeof(WeaponData), false));
 
@@ -271,20 +261,18 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void LoadAll_MissingDirectory_SkipsSilently()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
-
-        // 不创建目录，直接 Load
 
         repo.Load();
 
-        Assert.AreEqual(0, repo.GetAllId<CharacterConfig>().Count());
+        Assert.IsEmpty(repo.GetAllId<CharacterConfig>());
     }
 
     [TestMethod]
     public void LoadAll_IgnoresNonMatchingExtensions()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
         WriteConfig(typeof(CharacterConfig), "char_001",
@@ -304,13 +292,13 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void LoadAll_SkipsAlreadyLoaded()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001",
             """{"stringId":"char_001","name":"Miku"}""");
 
         repo.Load();
-        repo.Load();   // 第二次应跳过已加载项
+        repo.Load();
 
         int count = repo.GetAllId<CharacterConfig>().Count();
         Assert.AreEqual(1, count);
@@ -323,10 +311,10 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void GetValue_Missing_ReturnsNull()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
-        var result = repo.GetValue<CharacterConfig, CharacterData>("missing");
+        CharacterData? result = repo.GetValue<CharacterConfig, CharacterData>("missing");
 
         Assert.IsNull(result);
     }
@@ -334,10 +322,10 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void TryGetValue_Missing_ReturnsFalse()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
-        bool found = repo.TryGetValue<CharacterConfig, CharacterData>("missing", out var data);
+        bool found = repo.TryGetValue<CharacterConfig, CharacterData>("missing", out CharacterData? data);
 
         Assert.IsFalse(found);
         Assert.IsNull(data);
@@ -346,13 +334,12 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void TryGetValue_WrongConfigType_ReturnsFalse()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001",
             """{"stringId":"char_001"}""");
         repo.Load();
 
-        // 用 WeaponData 去查 CharacterConfig 分组
         bool found = repo.TryGetValue<CharacterConfig, WeaponData>("char_001", out _);
 
         Assert.IsFalse(found);
@@ -365,7 +352,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void GetAllId_ReturnsLoadedIds()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
         WriteConfig(typeof(CharacterConfig), "char_002", """{"stringId":"char_002"}""");
@@ -376,14 +363,13 @@ public class ConfigRepositoryTests
             .OrderBy(x => x)
             .ToList();
 
-        CollectionAssert.AreEqual(
-            expected, ids);
+        CollectionAssert.AreEqual(expected, ids);
     }
 
     [TestMethod]
     public void GetAllId_UnregisteredGroup_ReturnsEmpty()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
 
         var ids = repo.GetAllId<CharacterConfig>().ToList();
 
@@ -393,12 +379,12 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void GetAllId_IncludesModIdInReturnedId()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
         repo.Load();
 
-        var id = repo.GetAllId<CharacterConfig>().First();
+        Id id = repo.GetAllId<CharacterConfig>().First();
 
         Assert.AreEqual(_modId, id.ModId);
         Assert.AreEqual("char_001", id.ItemId);
@@ -407,7 +393,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void GetAllConfigType_ReturnsRegisteredTypes()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         repo.Add(typeof(WeaponConfig), (typeof(WeaponData), false));
 
@@ -424,16 +410,14 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Sha256_StableAcrossLoadOrder()
     {
-        // 场景 1：先加载 char_001 再加载 char_002
-        var repo1 = CreateRepo();
+        ConfigRepository repo1 = CreateRepo();
         repo1.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
         WriteConfig(typeof(CharacterConfig), "char_002", """{"stringId":"char_002"}""");
         repo1.Load<CharacterConfig, CharacterData>("char_001");
         repo1.Load<CharacterConfig, CharacterData>("char_002");
 
-        // 场景 2：反序加载
-        var repo2 = CreateRepo();
+        ConfigRepository repo2 = CreateRepo();
         repo2.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         repo2.Load<CharacterConfig, CharacterData>("char_002");
         repo2.Load<CharacterConfig, CharacterData>("char_001");
@@ -444,7 +428,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Sha256_DifferentContent_DifferentHash()
     {
-        var repo1 = CreateRepo();
+        ConfigRepository repo1 = CreateRepo();
         repo1.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
         repo1.Load();
@@ -452,7 +436,7 @@ public class ConfigRepositoryTests
         Cleanup();
         Setup();
 
-        var repo2 = CreateRepo();
+        ConfigRepository repo2 = CreateRepo();
         repo2.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"different"}""");
         repo2.Load();
@@ -463,7 +447,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Sha256_EmptyRepo_ReturnsStableValue()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
 
         string hash = repo.Sha256;
 
@@ -478,9 +462,244 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Serializer_ReturnsInjectedInstance()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
 
         Assert.AreSame(_serializer, repo.Serializer);
+    }
+
+    // ══════════════════════════════════════════════
+    // Unload（单个）
+    // ══════════════════════════════════════════════
+
+    [TestMethod]
+    public void Unload_SingleItem_ReturnsTrue()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
+        repo.Load<CharacterConfig, CharacterData>("char_001");
+
+        bool result = repo.Unload<CharacterConfig>("char_001");
+
+        Assert.IsTrue(result);
+    }
+
+    [TestMethod]
+    public void Unload_SingleItem_MissingItem_ReturnsFalse()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+
+        bool result = repo.Unload<CharacterConfig>("missing");
+
+        Assert.IsFalse(result);
+    }
+
+    [TestMethod]
+    public void Unload_SingleItem_RemovesFromCache()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
+        repo.Load<CharacterConfig, CharacterData>("char_001");
+
+        repo.Unload<CharacterConfig>("char_001");
+
+        Assert.IsFalse(repo.TryGetValue<CharacterConfig, CharacterData>("char_001", out _));
+        Assert.IsEmpty(repo.GetAllId<CharacterConfig>());
+    }
+
+    [TestMethod]
+    public void Unload_SingleItem_ClearsSha256()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
+
+        string emptyHash = repo.Sha256;
+        repo.Load<CharacterConfig, CharacterData>("char_001");
+        Assert.AreNotEqual(emptyHash, repo.Sha256);
+
+        repo.Unload<CharacterConfig>("char_001");
+
+        // 唯一引用被移除后，哈希应回到空仓储状态
+        Assert.AreEqual(emptyHash, repo.Sha256);
+    }
+
+    [TestMethod]
+    public void Unload_SingleItem_NullClassType_Throws()
+    {
+        ConfigRepository repo = CreateRepo();
+
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => repo.Unload(null!, "char_001"));
+    }
+
+    [TestMethod]
+    public void Unload_SingleItem_NullItemId_Throws()
+    {
+        ConfigRepository repo = CreateRepo();
+
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => repo.Unload<CharacterConfig>(null!));
+    }
+
+    [TestMethod]
+    public void Unload_SingleItem_BlankItemId_Throws()
+    {
+        ConfigRepository repo = CreateRepo();
+
+        Assert.ThrowsExactly<ArgumentException>(
+            () => repo.Unload<CharacterConfig>("   "));
+    }
+
+    [TestMethod]
+    public void Unload_ThenLoad_Succeeds()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001",
+            """{"stringId":"char_001","name":"Miku"}""");
+        repo.Load<CharacterConfig, CharacterData>("char_001");
+
+        repo.Unload<CharacterConfig>("char_001");
+        bool reloaded = repo.Load<CharacterConfig, CharacterData>("char_001");
+
+        Assert.IsTrue(reloaded);
+        Assert.IsTrue(repo.TryGetValue<CharacterConfig, CharacterData>("char_001", out _));
+    }
+
+    // ══════════════════════════════════════════════
+    // Unload（分组）
+    // ══════════════════════════════════════════════
+
+    [TestMethod]
+    public void Unload_Group_ReturnsTrue()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+
+        bool result = repo.Unload(typeof(CharacterConfig));
+
+        Assert.IsTrue(result);
+    }
+
+    [TestMethod]
+    public void Unload_Group_Unregistered_ReturnsFalse()
+    {
+        ConfigRepository repo = CreateRepo();
+
+        bool result = repo.Unload(typeof(CharacterConfig));
+
+        Assert.IsFalse(result);
+    }
+
+    [TestMethod]
+    public void Unload_Group_RemovesAllItems()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
+        WriteConfig(typeof(CharacterConfig), "char_002", """{"stringId":"char_002"}""");
+        repo.Load();
+
+        repo.Unload(typeof(CharacterConfig));
+
+        Assert.IsEmpty(repo.GetAllId<CharacterConfig>());
+        Assert.IsFalse(repo.TryGetValue<CharacterConfig, CharacterData>("char_001", out _));
+        Assert.IsFalse(repo.TryGetValue<CharacterConfig, CharacterData>("char_002", out _));
+    }
+
+    [TestMethod]
+    public void Unload_Group_KeepsGroupRegistered()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
+        repo.Load();
+
+        repo.Unload(typeof(CharacterConfig));
+
+        // 分组注册保留
+        CollectionAssert.Contains(repo.GetAllConfigType().ToList(), typeof(CharacterConfig));
+
+        // 可以重新加载
+        Assert.IsTrue(repo.Load<CharacterConfig, CharacterData>("char_001"));
+    }
+
+    [TestMethod]
+    public void Unload_SharedRootPath_KeepsHashUntilLastUnload()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), true));
+        repo.Add(typeof(WeaponConfig), (typeof(WeaponData), true));
+
+        // 同一文件被两个分组加载
+        WriteConfig(typeof(CharacterConfig), "shared",
+            """{"stringId":"shared","name":"shared","damage":10}""", isRoot: true);
+
+        repo.Load<CharacterConfig, CharacterData>("shared", isRoot: true);
+        repo.Load<WeaponConfig, WeaponData>("shared", isRoot: true);
+
+        string hashBefore = repo.Sha256;
+
+        // 卸载第一个分组：WeaponConfig 仍引用同一文件，哈希不应变化
+        repo.Unload<CharacterConfig>("shared");
+        Assert.AreEqual(hashBefore, repo.Sha256);
+
+        // 卸载第二个分组：无其他引用，哈希应变化
+        repo.Unload<WeaponConfig>("shared");
+        Assert.AreNotEqual(hashBefore, repo.Sha256);
+    }
+
+    // ══════════════════════════════════════════════
+    // UnloadAll
+    // ══════════════════════════════════════════════
+
+    [TestMethod]
+    public void UnloadAll_ClearsAllItems()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        repo.Add(typeof(WeaponConfig), (typeof(WeaponData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
+        WriteConfig(typeof(WeaponConfig), "sword_01", """{"stringId":"sword_01"}""");
+        repo.Load();
+
+        repo.UnloadAll();
+
+        Assert.IsEmpty(repo.GetAllId<CharacterConfig>());
+        Assert.IsEmpty(repo.GetAllId<WeaponConfig>());
+    }
+
+    [TestMethod]
+    public void UnloadAll_KeepsGroupsRegistered()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        repo.Add(typeof(WeaponConfig), (typeof(WeaponData), false));
+
+        repo.UnloadAll();
+
+        var types = repo.GetAllConfigType().ToList();
+        CollectionAssert.Contains(types, typeof(CharacterConfig));
+        CollectionAssert.Contains(types, typeof(WeaponConfig));
+    }
+
+    [TestMethod]
+    public void UnloadAll_ResetsSha256()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
+
+        string emptyHash = repo.Sha256;
+        repo.Load();
+        Assert.AreNotEqual(emptyHash, repo.Sha256);
+
+        repo.UnloadAll();
+
+        Assert.AreEqual(emptyHash, repo.Sha256);
     }
 
     // ══════════════════════════════════════════════
@@ -490,7 +709,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_ConcurrentSameItem_OnlyOneSucceeds()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
 
@@ -508,7 +727,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_ConcurrentDifferentItems_AllSucceed()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
         for (int i = 0; i < 20; i++)
@@ -528,7 +747,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Query_ConcurrentWithLoad_DoesNotThrow()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
         for (int i = 0; i < 20; i++)
@@ -558,13 +777,32 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Add_Concurrent_OnlyOneSucceeds()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
 
         int successCount = 0;
 
         Parallel.For(0, 50, _ =>
         {
             if (repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false)))
+                Interlocked.Increment(ref successCount);
+        });
+
+        Assert.AreEqual(1, successCount);
+    }
+
+    [TestMethod]
+    public void Unload_ConcurrentSameItem_OnlyOneSucceeds()
+    {
+        ConfigRepository repo = CreateRepo();
+        repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
+        WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
+        repo.Load<CharacterConfig, CharacterData>("char_001");
+
+        int successCount = 0;
+
+        Parallel.For(0, 50, _ =>
+        {
+            if (repo.Unload<CharacterConfig>("char_001"))
                 Interlocked.Increment(ref successCount);
         });
 
@@ -578,7 +816,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_IsRootTrue_FindsInModRoot()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), true));
         WriteConfig(typeof(CharacterConfig), "global_config",
             """{"stringId":"global_config","name":"global"}""", isRoot: true);
@@ -591,7 +829,7 @@ public class ConfigRepositoryTests
     [TestMethod]
     public void Load_IsRootFalse_FindsInSubdirectory()
     {
-        var repo = CreateRepo();
+        ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
         WriteConfig(typeof(CharacterConfig), "char_001",
             """{"stringId":"char_001","name":"Miku"}""", isRoot: false);

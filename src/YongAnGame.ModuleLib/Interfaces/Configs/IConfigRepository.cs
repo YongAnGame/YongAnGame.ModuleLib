@@ -17,7 +17,8 @@ namespace YongAnGame.ModuleLib.Interfaces.Configs;
 /// <para>
 /// 典型生命周期：启动阶段并发调用 <see cref="Add"/> 与 <see cref="Load()"/>，
 /// 运行阶段只调用 <see cref="GetValue{TType, TConfig}"/>、
-/// <see cref="TryGetValue{TType, TConfig}"/> 等查询方法
+/// <see cref="TryGetValue{TType, TConfig}"/> 等查询方法；
+/// 需要热重载时按需调用 <see cref="Unload(Type, string)"/> 后重新 <see cref="Load(Type, Type, string, bool)"/>
 /// </para>
 /// </remarks>
 public interface IConfigRepository
@@ -36,8 +37,8 @@ public interface IConfigRepository
     /// <remarks>
     /// 将所有文件的 SHA256 排序后拼接再取哈希，与文件加载顺序无关
     /// <para>
-    /// 并发加载期间读取时，反映的是“调用瞬间”已加载的文件集合，
-    /// 不保证对应某一完整时刻；加载完成后读取即为稳定值
+    /// 并发加载或卸载期间读取时，反映的是“调用瞬间”的哈希集合，
+    /// 不保证对应某一完整时刻；加载/卸载完成后读取即为稳定值
     /// </para>
     /// </remarks>
     string Sha256 { get; }
@@ -65,7 +66,7 @@ public interface IConfigRepository
     /// <remarks>
     /// 线程安全：可并发调用
     /// <para>
-    /// 返回的是调用瞬间的快照视图，之后的加载不会反映在本次结果中
+    /// 返回的是调用瞬间的快照视图，之后的加载或卸载不会反映在本次结果中
     /// </para>
     /// </remarks>
     IEnumerable<Id> GetAllId<T>();
@@ -113,6 +114,7 @@ public interface IConfigRepository
     /// <remarks>
     /// 分组目录不存在时静默跳过
     /// 仅加载扩展名与 <see cref="Serializer"/> 匹配的文件
+    /// 已加载的配置项不会重复加载
     /// <para>
     /// 线程安全：可并发调用
     /// 遍历分组时看到的是调用瞬间的快照，期间新增的分组可能不被本次加载
@@ -148,4 +150,87 @@ public interface IConfigRepository
     /// 线程安全：可并发调用
     /// </remarks>
     bool Load<TClass, TConfig>(string itemId, bool isRoot = false);
+
+    /// <summary>
+    /// 卸载指定配置分组下的单个配置项
+    /// </summary>
+    /// <param name="classType">配置分组类型</param>
+    /// <param name="itemId">配置项的 Id</param>
+    /// <returns>卸载成功返回 <see langword="true"/>，该配置项未加载返回 <see langword="false"/></returns>
+    /// <remarks>
+    /// 线程安全：可并发调用，并发卸载同一项时只有一个线程成功
+    /// <para>
+    /// 仅从缓存中移除配置对象，不删除磁盘文件
+    /// </para>
+    /// <para>
+    /// 若该配置项对应的文件路径不再被其他已加载项引用，同时清理其在
+    /// <see cref="Sha256"/> 中的哈希记录；根目录模式下不同分组可能共享
+    /// 同一文件，此时哈希会保留至最后一个引用被卸载
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="classType"/> 为 null</exception>
+    /// <exception cref="ArgumentException"><paramref name="itemId"/> 为 null 或空白</exception>
+    bool Unload(Type classType, string itemId);
+
+    /// <summary>
+    /// 泛型版本的 <see cref="Unload(Type, string)"/>
+    /// </summary>
+    /// <typeparam name="TClass">配置分组类型</typeparam>
+    /// <param name="itemId">配置项的 Id</param>
+    /// <returns>卸载成功返回 <see langword="true"/>，该配置项未加载返回 <see langword="false"/></returns>
+    /// <remarks>
+    /// 线程安全：可并发调用
+    /// <para>
+    /// 仅从缓存中移除配置对象，不删除磁盘文件
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentException"><paramref name="itemId"/> 为 null 或空白</exception>
+    bool Unload<TClass>(string itemId);
+
+    /// <summary>
+    /// 卸载指定配置分组的全部配置项
+    /// </summary>
+    /// <param name="classType">配置分组类型</param>
+    /// <returns>分组已注册返回 <see langword="true"/>，分组未注册返回 <see langword="false"/></returns>
+    /// <remarks>
+    /// 线程安全：可并发调用
+    /// <para>
+    /// 分组注册本身保留，后续可再次调用 <see cref="Load()"/> 或
+    /// <see cref="Load(Type, Type, string, bool)"/> 重新填充
+    /// </para>
+    /// <para>
+    /// 所有被卸载配置项对应的哈希记录在不再被其他分组引用时一并清理；
+    /// 卸载仅影响缓存，不删除磁盘文件
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="classType"/> 为 null</exception>
+    bool Unload(Type classType);
+
+    /// <summary>
+    /// 泛型版本的 <see cref="Unload(Type)"/>
+    /// </summary>
+    /// <typeparam name="TClass">配置分组类型</typeparam>
+    /// <returns>分组已注册返回 <see langword="true"/>，分组未注册返回 <see langword="false"/></returns>
+    /// <remarks>
+    /// 线程安全：可并发调用
+    /// <para>
+    /// 分组注册本身保留，后续可再次加载
+    /// </para>
+    /// </remarks>
+    bool Unload<TClass>();
+
+    /// <summary>
+    /// 卸载所有配置分组的全部配置项
+    /// </summary>
+    /// <remarks>
+    /// 线程安全：可并发调用
+    /// <para>
+    /// 所有分组注册保留，<see cref="GetAllConfigType"/> 结果不变；
+    /// 所有已加载配置项与哈希记录被清空
+    /// </para>
+    /// <para>
+    /// 卸载仅影响缓存，不删除磁盘文件
+    /// </para>
+    /// </remarks>
+    void UnloadAll();
 }
