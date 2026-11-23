@@ -49,7 +49,6 @@ public interface IReadOnlyStandardRepository<TKey, TData>
     /// </remarks>
     bool TryGetValue(TKey key, [NotNullWhen(true)] out TData? data);
 
-
     /// <summary>
     /// 判断仓储中是否包含指定键
     /// </summary>

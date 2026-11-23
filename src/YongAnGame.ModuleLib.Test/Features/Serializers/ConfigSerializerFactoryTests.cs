@@ -68,9 +68,9 @@ public class ConfigSerializerFactoryTests
 
         IReadOnlyList<string> extensions = factory.AllExtensions();
 
-        CollectionAssert.Contains(extensions.ToList(), ".json");
-        CollectionAssert.Contains(extensions.ToList(), ".yaml");
-        CollectionAssert.Contains(extensions.ToList(), ".yml");
+        Assert.Contains(".json", extensions.ToList());
+        Assert.Contains(".yaml", extensions.ToList());
+        Assert.Contains(".yml", extensions.ToList());
     }
 
     [TestMethod]

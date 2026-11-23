@@ -107,7 +107,9 @@ public class JsonConfigSerializerTests
         finally
         {
             if (Directory.Exists(tempDir))
+            {
                 Directory.Delete(tempDir, recursive: true);
+            }
         }
     }
 

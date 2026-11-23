@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net47;net8.0;net10.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net48;net8.0;net10.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
-		<AnalysisLevel>latest-All</AnalysisLevel>
-
+		<AnalysisLevel>latest-Recommended</AnalysisLevel>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		
 		<!-- NuGet 包元数据（注意：没有 <Version>，由 MinVer 推导） -->
 		<PackageId>YongAnGame.ModuleLib</PackageId>
 		<Authors>YongAnGame</Authors>
@@ -18,55 +19,27 @@
 		<PackageProjectUrl>https://github.com/YongAnGame/YongAnGame.ModuleLib</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/YongAnGame/YongAnGame.ModuleLib</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-
-		<!-- 生成 XML 文档，DocFX 需要 -->
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<NoWarn>$(NoWarn);CS1591</NoWarn>
-
-		<!-- 符号包 -->
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-
-		<!-- SourceLink -->
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-
-		<!-- 多目标时每个 TFM 独立打包 -->
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
-
-	<!-- ────────────────────────────────────────────── -->
-	<!-- MinVer：从 git tag 自动推导版本                 -->
-	<!-- ────────────────────────────────────────────── -->
-	<PropertyGroup>
-		<MinVerTagPrefix>v</MinVerTagPrefix>
-		<MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
-		<MinVerDefaultPreReleaseIdentifiers>dev</MinVerDefaultPreReleaseIdentifiers>
-		<Copyright>Copyright © YongAnGame</Copyright>
-	</PropertyGroup>
-	<ItemGroup>
-		<None Include="..\..\README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-	</ItemGroup>
 
 	<!-- ────────────────────────────────────────────── -->
 	<!-- 全目标框架通用依赖                               -->
 	<!-- ────────────────────────────────────────────── -->
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.404">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="YamlDotNet" Version="18.1.0" />
-		<PackageReference Include="MinVer" Version="8.0.0" PrivateAssets="all" />
 	</ItemGroup>
 
 	<!-- ────────────────────────────────────────────── -->
-	<!-- netstandard2.0 + net47：缺失大量 BCL API        -->
+	<!-- netstandard2.0 + net48：缺失大量 BCL API        -->
 	<!-- ────────────────────────────────────────────── -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net47'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net48'">
 		<PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
-		<PackageReference Include="System.Text.Json" Version="10.0.12" />
-		<PackageReference Include="Polyfill" Version="11.4.4">
+		<PackageReference Include="System.Text.Json" Version="10.0.15" />
+		<PackageReference Include="Polyfill" Version="12.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -77,8 +50,8 @@
 	<!-- 但缺 IParsable、ThrowIfXxx、CallerArgumentExpr  -->
 	<!-- ────────────────────────────────────────────── -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-		<PackageReference Include="System.Text.Json" Version="10.0.12" />
-		<PackageReference Include="Polyfill" Version="11.4.4">
+		<PackageReference Include="System.Text.Json" Version="10.0.15" />
+		<PackageReference Include="Polyfill" Version="12.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

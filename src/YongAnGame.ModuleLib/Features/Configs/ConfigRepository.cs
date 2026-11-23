@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using YongAnGame.ModuleLib.Components;
 using YongAnGame.ModuleLib.Exceptions;
 using YongAnGame.ModuleLib.Extensions;
@@ -72,7 +72,10 @@ public partial class ConfigRepository(
     {
         Type type = typeof(T);
         if (!_loadedConfigs.TryGetValue(type, out ConcurrentDictionary<string, object>? table))
+        {
             return [];
+        }
+
         return table.Keys.Select(itemId => new Id(modId, itemId));
     }
 
@@ -86,7 +89,9 @@ public partial class ConfigRepository(
         ArgumentNullException.ThrowIfNull(configType);
 
         if (!_loadedConfigs.TryGetValue(classType, out ConcurrentDictionary<string, object>? table))
+        {
             return false;
+        }
 
         string className = classType.Name[1..];
         LogLoadingConfig(logger, itemId, className);
@@ -152,16 +157,25 @@ public partial class ConfigRepository(
         foreach ((Type classType, (Type configType, bool isRoot)) in _typeConfigs)
         {
             string directory = Path.Combine(options.ModPath, modId, classType.Name[1..]);
-            if (!Directory.Exists(directory)) continue;
+            if (!Directory.Exists(directory))
+            {
+                continue;
+            }
 
             foreach (string path in Directory.EnumerateFiles(directory))
             {
                 string extension = Path.GetExtension(path);
-                if (!IsSupportedExtension(extension)) continue;
+                if (!IsSupportedExtension(extension))
+                {
+                    continue;
+                }
 
                 string itemId = Path.GetFileNameWithoutExtension(path);
                 if (_loadedConfigs.TryGetValue(classType, out ConcurrentDictionary<string, object>? table)
-                    && table.ContainsKey(itemId)) continue;
+                    && table.ContainsKey(itemId))
+                {
+                    continue;
+                }
 
                 Load(classType, configType, itemId, isRoot);
             }
@@ -174,9 +188,15 @@ public partial class ConfigRepository(
         ArgumentNullException.ThrowIfNull(classType);
 
         if (!_typeConfigs.TryAdd(classType, config))
+        {
             return false;
+        }
+
         if (!_loadedConfigs.TryAdd(classType, new ConcurrentDictionary<string, object>()))
+        {
             return false;
+        }
+
         return true;
     }
 
@@ -233,7 +253,9 @@ public partial class ConfigRepository(
             foreach (string path in paths.Values)
             {
                 if (!IsPathReferenced(path))
+                {
                     _configSha256s.TryRemove(path, out _);
+                }
             }
         }
 
@@ -277,7 +299,9 @@ public partial class ConfigRepository(
             foreach (string candidate in paths.Values)
             {
                 if (string.Equals(candidate, path, StringComparison.Ordinal))
+                {
                     return true;
+                }
             }
         }
         return false;
@@ -295,7 +319,10 @@ public partial class ConfigRepository(
         foreach (string extension in Serializer.Extensions)
         {
             string candidate = Path.Combine(directory, itemId + extension);
-            if (File.Exists(candidate)) return candidate;
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
         }
         return null;
     }

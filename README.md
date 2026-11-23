@@ -171,6 +171,7 @@ ArgumentOutOfRangeException.ThrowIfNegative(subId);
 | `Microsoft.Bcl.HashCode` | `HashCode` 兼容 |
 | `System.Memory` | 数组切片与 `Span` 支持 |
 | `MinVer` | 版本管理 |
+| `Microsoft.SourceLink.GitHub` | 跳转到 `GitHub` |
 
 ## 线程安全模型
 

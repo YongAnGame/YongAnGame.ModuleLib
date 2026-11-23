@@ -129,12 +129,18 @@ public readonly struct Id
         subId = 0;
 
         int dot = s.IndexOf(Separator, StringComparison.Ordinal);
-        if (dot <= 0 || dot >= s.Length - 1) return false;
+        if (dot <= 0 || dot >= s.Length - 1)
+        {
+            return false;
+        }
 
         string left = s[..dot];
         string right = s[(dot + 1)..];
 
-        if (string.IsNullOrWhiteSpace(left)) return false;
+        if (string.IsNullOrWhiteSpace(left))
+        {
+            return false;
+        }
 
         int colon = right.IndexOf(SubIdSeparator, StringComparison.Ordinal);
         string itemPart;
@@ -147,15 +153,29 @@ public readonly struct Id
         }
         else
         {
-            if (colon == 0 || colon == right.Length - 1) return false;
+            if (colon == 0 || colon == right.Length - 1)
+            {
+                return false;
+            }
+
             itemPart = right[..colon];
             subIdPart = right[(colon + 1)..];
         }
 
-        if (string.IsNullOrWhiteSpace(itemPart)) return false;
-        if (!int.TryParse(subIdPart, NumberStyles.None, CultureInfo.InvariantCulture, out int parsed))
+        if (string.IsNullOrWhiteSpace(itemPart))
+        {
             return false;
-        if (parsed < 0) return false;
+        }
+
+        if (!int.TryParse(subIdPart, NumberStyles.None, CultureInfo.InvariantCulture, out int parsed))
+        {
+            return false;
+        }
+
+        if (parsed < 0)
+        {
+            return false;
+        }
 
         modId = left;
         itemId = itemPart;
@@ -236,8 +256,34 @@ public readonly struct Id
     /// <inheritdoc />
     public override int GetHashCode() => HashCode.Combine(ModId, ItemId, SubId);
 
+    /// <summary>
+    /// 判断两个 <see cref="Id"/> 是否相等
+    /// </summary>
+    /// <param name="left">左侧操作数</param>
+    /// <param name="right">右侧操作数</param>
+    /// <returns>
+    /// <paramref name="left"/> 与 <paramref name="right"/> 的
+    /// <see cref="ModId"/>、<see cref="ItemId"/> 与 <see cref="SubId"/> 均相同
+    /// 返回 <see langword="true"/>，否则返回 <see langword="false"/>
+    /// </returns>
+    /// <remarks>
+    /// 等价于 <see cref="Equals(Id)"/>，采用序数比较
+    /// </remarks>
     public static bool operator ==(Id left, Id right) => left.Equals(right);
 
+    /// <summary>
+    /// 判断两个 <see cref="Id"/> 是否不相等
+    /// </summary>
+    /// <param name="left">左侧操作数</param>
+    /// <param name="right">右侧操作数</param>
+    /// <returns>
+    /// <paramref name="left"/> 与 <paramref name="right"/> 的
+    /// <see cref="ModId"/>、<see cref="ItemId"/> 与 <see cref="SubId"/> 任一不同
+    /// 返回 <see langword="true"/>，否则返回 <see langword="false"/>
+    /// </returns>
+    /// <remarks>
+    /// 等价于 <see cref="Equals(Id)"/> 取反，与 <see cref="operator =="/> 互为否定
+    /// </remarks>
     public static bool operator !=(Id left, Id right) => !left.Equals(right);
 
     #endregion
@@ -270,7 +316,9 @@ public readonly struct Id
     {
         result = default;
         if (s is null || !TryParseCore(s, out string? modId, out string? itemId, out int subId))
+        {
             return false;
+        }
 
         result = new Id(modId, itemId, subId);
         return true;

@@ -77,10 +77,14 @@ public sealed class ResourceObject(object? obj)
     public T GetObject<T>()
     {
         if (_obj is T t)
+        {
             return t;
+        }
 
         if (_obj is null && default(T) is null)
+        {
             return default!;
+        }
 
         throw new InvalidCastException(
             $"ResourceObject 实际存储类型为 {Describe(_obj)}，无法转换为 {typeof(T)}");

@@ -67,7 +67,7 @@ if (repo.TryGetValue<ICharacterConfig, CharacterData>("chestnut", out var data))
 | `net8.0` | 除 `Lock` 类型外全部支持 |
 | `netstandard2.1` | 需 Polyfill 补齐部分 API |
 | `netstandard2.0` | 需 Polyfill + 兼容包 |
-| `net47` | 需 Polyfill + 兼容包 |
+| `net48` | 需 Polyfill + 兼容包 |
 
 ## 许可证
 

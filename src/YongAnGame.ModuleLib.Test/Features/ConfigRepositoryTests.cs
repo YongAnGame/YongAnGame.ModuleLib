@@ -46,7 +46,7 @@ public class ConfigRepositoryTests
     /// 测试中使用 NullLogger 静默丢弃所有日志，避免测试代码
     /// 依赖任何具体的日志实现（如 Serilog）
     /// </summary>
-    private static readonly ILogger Logger = NullLogger.Instance;
+    private static readonly ILogger s_logger = NullLogger.Instance;
 
     private string _tempRoot = "";
     private string _modId = "";
@@ -75,7 +75,7 @@ public class ConfigRepositoryTests
     }
 
     private ConfigRepository CreateRepo()
-        => new(Logger, _options, _serializer, _modId);
+        => new(s_logger, _options, _serializer, _modId);
 
     /// <summary>
     /// 在 MOD 目录下创建配置文件
@@ -363,7 +363,7 @@ public class ConfigRepositoryTests
             .OrderBy(x => x)
             .ToList();
 
-        CollectionAssert.AreEqual(expected, ids);
+        Assert.AreSequenceEqual(s_expected, ids);
     }
 
     [TestMethod]
@@ -399,8 +399,8 @@ public class ConfigRepositoryTests
 
         var types = repo.GetAllConfigType().ToList();
 
-        CollectionAssert.Contains(types, typeof(CharacterConfig));
-        CollectionAssert.Contains(types, typeof(WeaponConfig));
+        Assert.Contains(typeof(CharacterConfig), types);
+        Assert.Contains(typeof(WeaponConfig), types);
     }
 
     // ══════════════════════════════════════════════
@@ -579,7 +579,7 @@ public class ConfigRepositoryTests
         ConfigRepository repo = CreateRepo();
         repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false));
 
-        bool result = repo.Unload(typeof(CharacterConfig));
+        bool result = repo.Unload<CharacterConfig>();
 
         Assert.IsTrue(result);
     }
@@ -589,7 +589,7 @@ public class ConfigRepositoryTests
     {
         ConfigRepository repo = CreateRepo();
 
-        bool result = repo.Unload(typeof(CharacterConfig));
+        bool result = repo.Unload<CharacterConfig>();
 
         Assert.IsFalse(result);
     }
@@ -603,7 +603,7 @@ public class ConfigRepositoryTests
         WriteConfig(typeof(CharacterConfig), "char_002", """{"stringId":"char_002"}""");
         repo.Load();
 
-        repo.Unload(typeof(CharacterConfig));
+        repo.Unload<CharacterConfig>();
 
         Assert.IsEmpty(repo.GetAllId<CharacterConfig>());
         Assert.IsFalse(repo.TryGetValue<CharacterConfig, CharacterData>("char_001", out _));
@@ -618,10 +618,10 @@ public class ConfigRepositoryTests
         WriteConfig(typeof(CharacterConfig), "char_001", """{"stringId":"char_001"}""");
         repo.Load();
 
-        repo.Unload(typeof(CharacterConfig));
+        repo.Unload<CharacterConfig>();
 
         // 分组注册保留
-        CollectionAssert.Contains(repo.GetAllConfigType().ToList(), typeof(CharacterConfig));
+        Assert.Contains(typeof(CharacterConfig), repo.GetAllConfigType());
 
         // 可以重新加载
         Assert.IsTrue(repo.Load<CharacterConfig, CharacterData>("char_001"));
@@ -682,8 +682,8 @@ public class ConfigRepositoryTests
         repo.UnloadAll();
 
         var types = repo.GetAllConfigType().ToList();
-        CollectionAssert.Contains(types, typeof(CharacterConfig));
-        CollectionAssert.Contains(types, typeof(WeaponConfig));
+        Assert.Contains(typeof(CharacterConfig), types);
+        Assert.Contains(typeof(WeaponConfig), types);
     }
 
     [TestMethod]
@@ -718,7 +718,9 @@ public class ConfigRepositoryTests
         Parallel.For(0, 50, _ =>
         {
             if (repo.Load<CharacterConfig, CharacterData>("char_001"))
+            {
                 Interlocked.Increment(ref successCount);
+            }
         });
 
         Assert.AreEqual(1, successCount);
@@ -741,7 +743,7 @@ public class ConfigRepositoryTests
             repo.Load<CharacterConfig, CharacterData>($"char_{i:D3}");
         });
 
-        Assert.AreEqual(20, repo.GetAllId<CharacterConfig>().Count());
+        Assert.HasCount(20, repo.GetAllId<CharacterConfig>());
     }
 
     [TestMethod]
@@ -759,7 +761,9 @@ public class ConfigRepositoryTests
         var loadTask = Task.Run(() =>
         {
             for (int i = 0; i < 20; i++)
+            {
                 repo.Load<CharacterConfig, CharacterData>($"char_{i:D3}");
+            }
         }, TestContext.CancellationToken);
 
         var queryTask = Task.Run(() =>
@@ -771,7 +775,7 @@ public class ConfigRepositoryTests
             }
         }, TestContext.CancellationToken);
 
-        Task.WaitAll(loadTask, queryTask);
+        Task.WaitAll([loadTask, queryTask], TestContext.CancellationToken);
     }
 
     [TestMethod]
@@ -784,7 +788,9 @@ public class ConfigRepositoryTests
         Parallel.For(0, 50, _ =>
         {
             if (repo.Add(typeof(CharacterConfig), (typeof(CharacterData), false)))
+            {
                 Interlocked.Increment(ref successCount);
+            }
         });
 
         Assert.AreEqual(1, successCount);
@@ -803,7 +809,9 @@ public class ConfigRepositoryTests
         Parallel.For(0, 50, _ =>
         {
             if (repo.Unload<CharacterConfig>("char_001"))
+            {
                 Interlocked.Increment(ref successCount);
+            }
         });
 
         Assert.AreEqual(1, successCount);
@@ -841,5 +849,5 @@ public class ConfigRepositoryTests
 
     public TestContext TestContext { get; set; }
 
-    private static readonly string[] expected = ["char_001", "char_002"];
+    private static readonly string[] s_expected = ["char_001", "char_002"];
 }

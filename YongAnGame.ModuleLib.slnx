@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/IDE/">
     <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path="Directory.Build.props" />
   </Folder>
   <Project Path="src/YongAnGame.ModuleLib.Test/YongAnGame.ModuleLib.Test.csproj" Id="b009d912-3fba-4b04-8099-66ce7afae3ee" />
   <Project Path="src/YongAnGame.ModuleLib/YongAnGame.ModuleLib.csproj" />
