@@ -7,26 +7,69 @@ on:
     branches: [ "main", "master", "dev" ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   DOTNET_VERSION: '10.0.x'
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
   BUILD_CONFIGURATION: 'Release'
 
 jobs:
-  build:
-    name: Build & Test
-    runs-on: ubuntu-latest
-
+  # ─────────────────────────────────────────────
+  # Windows：五目标全编译 + 五目标全测试
+  # ─────────────────────────────────────────────
+  windows:
+    name: Windows · net47/48/8/10/11
+    runs-on: windows-latest
+    env:
+      NUGET_PACKAGES: C:\nuget   # 短路径，避开 Windows 长路径限制 [10](@ref)
     steps:
-      # ──────────────────────────────────────────────
-      # MinVer 需要完整 git 历史来推导版本
-      # ──────────────────────────────────────────────
-      - name: 检出代码
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0        # MinVer 需要完整历史
+
+      - name: 清理中间产物
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path . -Include bin,obj -Recurse -Force -ErrorAction SilentlyContinue |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 缓存 NuGet 包
+        uses: actions/cache@v5
+        with:
+          path: C:\nuget
+          key: nuget-win-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', '**/packages.lock.json') }}
+          restore-keys: nuget-win-
+
+      - name: 恢复依赖
+        run: dotnet restore
+
+      - name: 构建
+        run: dotnet build -c ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+      - name: 测试（全 TFM）
+        run: dotnet test -c ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal
+
+  # ─────────────────────────────────────────────
+  # Linux：编译校验 net47/48，测试只跑 net8/10/11
+  # ─────────────────────────────────────────────
+  linux:
+    name: Linux · build all / test net8/10/11
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: 安装 .NET SDK
-        uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -34,18 +77,16 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Packages.props', '**/packages.lock.json') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
+          key: nuget-linux-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', '**/packages.lock.json') }}
+          restore-keys: nuget-linux-
 
       - name: 恢复依赖
         run: dotnet restore
 
-      - name: 构建
-        run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+      # 库项目全 TFM 编译校验（net47/48 走引用程序集，不执行）
+      - name: 构建（全 TFM 校验）
+        run: dotnet build -c ${{ env.BUILD_CONFIGURATION }} --no-restore
 
-      # ──────────────────────────────────────────────
-      # 测试流程
-      # ──────────────────────────────────────────────
-      - name: 运行测试
-        run: dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore --verbosity normal
+      # 测试项目在 Linux 上 TargetFrameworks 已被 csproj 条件收敛为 net8/10/11
+      - name: 测试（net8.0 / net10.0 / net11.0）
+        run: dotnet test -c ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal
